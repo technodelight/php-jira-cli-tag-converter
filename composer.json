@@ -1,0 +1,36 @@
+{
+    "name": "technodelight/php-jira-cli-tag-converter",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Zenc",
+            "email": "zenc@zenc.hu"
+        }
+    ],
+    "require": {
+        "php": ">= 7.0",
+        "symfony/console": "^2.7"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "*",
+        "behat/behat": "*"
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "autoload": {
+        "psr-4": {"Technodelight\\JiraTagConverter\\": "src"}
+    },
+    "scripts": {
+        "test": [
+            "@test-unit",
+            "@test-acceptance"
+        ],
+        "test-unit": [
+            "bin/phpspec --ansi run -fpretty"
+        ],
+        "test-acceptance": [
+            "bin/behat --colors"
+        ]
+    }
+}
