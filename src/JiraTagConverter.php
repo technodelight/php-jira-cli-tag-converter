@@ -295,7 +295,7 @@ class JiraTagConverter
         }
 
         foreach ($lines as $idx => $line) {
-            $lines[$idx] = preg_replace('#^-----*#', str_repeat('─', $maxLength), trim($line));
+            $lines[$idx] = preg_replace('#^-----*#', str_repeat('─', $maxLength), $line);
         }
 
         $body = join(PHP_EOL, $lines);
