@@ -28,7 +28,7 @@ class JiraTagConverter
         'color' => true,
         'mentions' => true,
         'attachments' => true,
-        'images' => false,
+        'images' => true,
         'tables' => true,
         'lines' => true,
         'panels' => true,
@@ -270,7 +270,7 @@ class JiraTagConverter
         if (preg_match_all('~!([^|!]+)(\|thumbnail)?!~', $body, $matches)) {
             $replacePairs = [];
             foreach ($matches[1] as $k => $embeddedImage) {
-                $replacePairs[$matches[0][$k]] = '<comment>jira download ' . $embeddedImage . '</>';
+                $replacePairs[$matches[0][$k]] = '<fg=cyan>' . $embeddedImage . '</>';
             }
             $body = strtr($body, $replacePairs);
         }
@@ -289,11 +289,16 @@ class JiraTagConverter
         foreach ($lines as $line) {
             $maxLength = max($maxLength, strlen(trim($line)));
         }
+
         if ($this->opt('terminalWidth') && $maxLength > $this->opt('terminalWidth')) {
             $maxLength = $this->opt('terminalWidth') - $this->opt('tabulation');
         }
 
-        $body = preg_replace('~^-----*~m', str_repeat('─', $maxLength), $body);
+        foreach ($lines as $idx => $line) {
+            $lines[$idx] = preg_replace('#^-----*#', str_repeat('─', $maxLength), trim($line));
+        }
+
+        $body = join(PHP_EOL, $lines);
     }
 
     private function convertPanels(&$body)

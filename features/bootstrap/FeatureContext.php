@@ -54,6 +54,18 @@ class FeatureContext implements Context
     }
 
     /**
+     * @When I convert the text with the terminal width :terminalWidth
+     */
+    public function iConvertTheTextWithTheTerminalWidth($terminalWidth)
+    {
+        $jiraTagConverter = new JiraTagConverter(['useExternalHighlighter' => false, 'terminalWidth' => $terminalWidth]);
+        $this->outputText = $jiraTagConverter->convert(
+            new BufferedOutput(),
+            $this->inputText
+        );
+    }
+
+    /**
      * @Then the text should be converted to:
      */
     public function theTextShouldBeConvertedTo(PyStringNode $string)
