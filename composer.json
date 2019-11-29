@@ -14,7 +14,8 @@
     },
     "require-dev": {
         "phpspec/phpspec": "*",
-        "behat/behat": "*"
+        "behat/behat": "*",
+        "phpunit/phpunit": "*"
     },
     "config": {
         "bin-dir": "bin"
