@@ -9,7 +9,8 @@
     ],
     "require": {
         "php": ">= 7.0",
-        "symfony/console": "^2.7"
+        "symfony/console": "^2.7",
+        "ssnepenthe/color-utils": "*"
     },
     "require-dev": {
         "phpspec/phpspec": "*",

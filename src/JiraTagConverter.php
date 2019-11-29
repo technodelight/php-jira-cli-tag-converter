@@ -3,8 +3,8 @@
 namespace Technodelight\JiraTagConverter;
 
 use Symfony\Component\Console\Output\OutputInterface;
-use Technodelight\JiraTagConverter\Components\TerminalHighlight;
 use Technodelight\Jira\Api\SymfonyRgbOutputFormatter\PaletteOutputFormatterStyle;
+use Technodelight\JiraTagConverter\Components\TerminalHighlight;
 use Technodelight\JiraTagConverter\Components\DelimiterBasedStringParser;
 use Technodelight\JiraTagConverter\Components\PanelParser;
 use Technodelight\JiraTagConverter\Components\SymfonyStyleDefinitionMerger;
