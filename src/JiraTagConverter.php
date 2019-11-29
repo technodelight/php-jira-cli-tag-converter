@@ -3,7 +3,7 @@
 namespace Technodelight\JiraTagConverter;
 
 use Symfony\Component\Console\Output\OutputInterface;
-use Technodelight\Jira\Api\SymfonyRgbOutputFormatter\PaletteOutputFormatterStyle;
+use Technodelight\JiraTagConverter\Components\PaletteOutputFormatterStyle;
 use Technodelight\JiraTagConverter\Components\TerminalHighlight;
 use Technodelight\JiraTagConverter\Components\DelimiterBasedStringParser;
 use Technodelight\JiraTagConverter\Components\PanelParser;
@@ -12,6 +12,7 @@ use Technodelight\JiraTagConverter\Components\TableParser;
 
 class JiraTagConverter
 {
+    const CODE_BLOCK_PLACEHOLDER = '##__code_block_%d__##';
     /**
      * @var array
      */
@@ -37,6 +38,7 @@ class JiraTagConverter
         'palette' => PaletteOutputFormatterStyle::class,
         'terminalWidth' => null,
         'tabulation' => 0,
+        'useExternalHighlighter' => true,
     ];
     private $prevOpts;
 
@@ -51,8 +53,9 @@ class JiraTagConverter
             if ($opts) {
                 $this->setTempOpts($opts);
             }
-            $this->shouldDo('code') && $this->convertCode($body);
+            $this->shouldDo('code') && $codeBlocks = $this->collectCodeBlocks($body);
             $this->shouldDo('quote') && $this->convertQuote($body);
+            $this->shouldDo('lists') && $this->convertLists($body);
             $this->shouldDo('bold_underscore') && $this->convertBoldUnderscore($body);
             $this->shouldDo('color') && $this->convertColor($body);
             $this->shouldDo('mentions') && $this->convertMentions($body);
@@ -60,10 +63,10 @@ class JiraTagConverter
             $this->shouldDo('images') && $this->convertImages($body);
             $this->shouldDo('lines') && $this->convertLines($body);
             $this->shouldDo('panels') && $this->convertPanels($body);
-            $this->shouldDo('lists') && $this->convertLists($body);
             $this->shouldDo('headings') && $this->convertHeadings($body);
             $this->shouldDo('emojis') && $this->convertEmojis($body);
             $this->shouldDo('tables') && $this->convertTables($body);
+            $this->shouldDo('code') && $this->convertCode($body, $codeBlocks);
             $formattedBody = $this->mergeDefinitions($body);
             // try formatting the body and ignore if an error happens
             $output->getFormatter()->format($body);
@@ -86,18 +89,31 @@ class JiraTagConverter
         return $this->options[$opt];
     }
 
-    private function convertCode(&$body)
+    private function collectCodeBlocks(&$body): array
     {
         // code block
         $parser = new DelimiterBasedStringParser('{code', 'code}');
         $collected = $parser->parse($body);
-        foreach ($collected as $replace) {
+        foreach ($collected as $idx => $replacement) {
+            // replace everything with a placeholder
+            $body = str_replace($replacement, sprintf(self::CODE_BLOCK_PLACEHOLDER, $idx), $body);
+        }
+
+        return $collected;
+    }
+
+    private function convertCode(&$body, $codeBlocks)
+    {
+        // code block
+        foreach ($codeBlocks as $idx => $replace) {
+            $body = str_replace(sprintf(self::CODE_BLOCK_PLACEHOLDER, $idx), $replace, $body);
+
             $strippedString = trim(preg_replace('~{code(:[^}]+)?}~', '', $replace), PHP_EOL);
             $syntax = '';
             if (preg_match('~^{code:([^}]+)}~', $replace, $matches)) {
                 $syntax = $matches[1];
             }
-            if (TerminalHighlight::isAvailable() && !empty($syntax)) {
+            if ($this->shouldDo('useExternalHighlighter') && TerminalHighlight::isAvailable() && !empty($syntax)) {
                 $codeBlock = TerminalHighlight::formatCode($strippedString, $syntax);
             } else {
                 $codeBlock = '<comment>' . $strippedString . '</>';
@@ -128,7 +144,20 @@ class JiraTagConverter
         $quoteDecor = '│ ';
         foreach ($collected as $replace) {
             $rawQuoteBlock = substr($replace, strlen('{quote}'), strlen('{quote}') * -1);
-            $quoteBlock = $quoteDecor . join(PHP_EOL . $quoteDecor, explode(PHP_EOL, trim($rawQuoteBlock, PHP_EOL)));
+            // check if quote is inline
+            $position = strpos($body, $replace);
+            $lastNewline = strrpos(substr($body, 0, $position), PHP_EOL);
+            $prefix = '';
+            $suffix = '';
+            if (trim(substr($body, $lastNewline, $position - (int) $lastNewline)) !== '') {
+                $prefix = PHP_EOL;
+                $suffix = PHP_EOL;
+            }
+
+            $quoteBlock = $prefix
+                . $quoteDecor
+                . join(PHP_EOL . $quoteDecor, explode(PHP_EOL, trim($rawQuoteBlock, PHP_EOL)))
+                . $suffix;
 
             $body = substr($body, 0, strpos($body, $replace))
                 . $quoteBlock
@@ -277,9 +306,9 @@ class JiraTagConverter
     {
         // lists
         $formattingPairs = [
-            '\1• ' => ['~(\s+)# ~', '~\* ~'],
-            '\1    • ' => ['~(\s+)## ~', '~\*\* ~'],
-            '\1        • ' => ['~(\s+)### ~', '~\*\*\* ~'],
+            '\1• ' => ['~(\s+)# ~', '~(\s+)\* ~'],
+            '\1    • ' => ['~(\s+)## ~', '~(\s+)\*\* ~'],
+            '\1        • ' => ['~(\s+)### ~', '~(\s+)\*\*\* ~'],
         ];
 
         foreach ($formattingPairs as $replacement => $regexes) {

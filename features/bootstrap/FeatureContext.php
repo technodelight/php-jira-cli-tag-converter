@@ -46,7 +46,7 @@ class FeatureContext implements Context
      */
     public function iConvertTheText()
     {
-        $jiraTagConverter = new JiraTagConverter();
+        $jiraTagConverter = new JiraTagConverter(['useExternalHighlighter' => false]);
         $this->outputText = $jiraTagConverter->convert(
             new BufferedOutput(),
             $this->inputText
@@ -54,11 +54,29 @@ class FeatureContext implements Context
     }
 
     /**
-     * @Then than text should be converted to:
+     * @Then the text should be converted to:
      */
-    public function thanTextShouldBeConvertedTo(PyStringNode $string)
+    public function theTextShouldBeConvertedTo(PyStringNode $string)
     {
-        $expectedOutputText = $string->getRaw();
-        Assert::assertSame($expectedOutputText, $this->outputText);
+        Assert::assertSame($string->getRaw(), $this->outputText);
+    }
+
+    /**
+     * @Then the text should not be converted to:
+     */
+    public function theTextShouldNotBeConvertedTo(PyStringNode $string)
+    {
+        Assert::assertNotSame($string->getRaw(), $this->outputText);
+    }
+
+    /**
+     * @Then the text should be converted to the following escaped string:
+     */
+    public function theTextShouldBeConvertedToTheFollowingEscapedString(PyStringNode $string)
+    {
+        Assert::assertSame(
+            $string->getRaw(),
+            preg_replace('/[\x00-\x1F\x7F]/u', '\\1', $this->outputText)
+        );
     }
 }

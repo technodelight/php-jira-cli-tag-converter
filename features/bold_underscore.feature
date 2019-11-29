@@ -1,4 +1,4 @@
-Feature: It converts from Jira markup to CLI colored output
+Feature: It converts bold and underscore properly
 
   Scenario: It can convert bold text
     Given we have the following text:
@@ -6,7 +6,7 @@ Feature: It converts from Jira markup to CLI colored output
     This should be *bold*
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should be converted to:
     """
     This should be <options=bold>bold</>
     """
@@ -17,7 +17,7 @@ Feature: It converts from Jira markup to CLI colored output
     This should be _underscore_
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should be converted to:
     """
     This should be <options=underscore>underscore</>
     """
@@ -28,7 +28,7 @@ Feature: It converts from Jira markup to CLI colored output
     This should be *_underscore_*
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should be converted to:
     """
     This should be <options=bold,underscore>underscore</>
     """
@@ -39,7 +39,7 @@ Feature: It converts from Jira markup to CLI colored output
     This should be _*underscore*_
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should be converted to:
     """
     This should be <options=underscore,bold>underscore</>
     """
@@ -51,7 +51,7 @@ Feature: It converts from Jira markup to CLI colored output
      and something else*
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should be converted to:
     """
     This should be *underscore
      and something else*
@@ -60,10 +60,10 @@ Feature: It converts from Jira markup to CLI colored output
   Scenario: It should not convert bold syntax at the beginning of line followed by white space
     Given we have the following text:
     """
-     *     this should be a bullet point*
+     * this should be a bullet point*
     """
     When I convert the text
-    Then than text should be converted to:
+    Then the text should not be converted to:
     """
-    <options=...>this should be a bullet point*</>
+     <options=bold> this should be a bullet point</>
     """
