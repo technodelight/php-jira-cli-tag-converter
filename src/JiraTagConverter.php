@@ -420,7 +420,7 @@ class JiraTagConverter
     {
         if ($this->prevOpts) {
             $this->options = $this->prevOpts;
-            $this->prevOpts = null;
+            $this->prevOpts = [];
         }
     }
 }
