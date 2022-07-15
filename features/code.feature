@@ -32,3 +32,14 @@ Feature: It converts code blocks unformatted
     """
     <comment>this is a code block *with formatting* and things like emoji :)</>
     """
+
+  Scenario: It converts a noformat block while having it's contents intact
+    Given we have the following text:
+    """
+    {noformat}this is a code block *with formatting* and things like emoji :){noformat}
+    """
+    When I convert the text
+    Then the text should be converted to:
+    """
+    <comment>this is a code block *with formatting* and things like emoji :)</>
+    """

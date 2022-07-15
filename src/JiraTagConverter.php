@@ -12,15 +12,9 @@ use Technodelight\JiraTagConverter\Components\TableParser;
 
 class JiraTagConverter
 {
-    const CODE_BLOCK_PLACEHOLDER = '##__code_block_%d__##';
-    /**
-     * @var array
-     */
-    private $options;
-    /**
-     * @var array
-     */
-    private $defaultOptions = [
+    private const CODE_BLOCK_PLACEHOLDER = '##__code_block_%d__##';
+    private array $options;
+    private array $defaultOptions = [
         'issueKeys' => true,
         'code' => true,
         'quote' => true,
@@ -40,7 +34,7 @@ class JiraTagConverter
         'tabulation' => 0,
         'useExternalHighlighter' => true,
     ];
-    private $prevOpts;
+    private array $prevOpts = [];
 
     public function __construct(array $options = [])
     {
@@ -53,7 +47,7 @@ class JiraTagConverter
             if ($opts) {
                 $this->setTempOpts($opts);
             }
-            $this->shouldDo('code') && $codeBlocks = $this->collectCodeBlocks($body);
+            $this->shouldDo('code') && ($codeBlocks = $this->collectCodeBlocks($body));
             $this->shouldDo('quote') && $this->convertQuote($body);
             $this->shouldDo('lists') && $this->convertLists($body);
             $this->shouldDo('bold_underscore') && $this->convertBoldUnderscore($body);
@@ -93,13 +87,20 @@ class JiraTagConverter
     {
         // code block
         $parser = new DelimiterBasedStringParser('{code', 'code}');
-        $collected = $parser->parse($body);
-        foreach ($collected as $idx => $replacement) {
+        $codeBlocks = $parser->parse($body);
+        foreach ($codeBlocks as $idx => $replacement) {
+            // replace everything with a placeholder
+            $body = str_replace($replacement, sprintf(self::CODE_BLOCK_PLACEHOLDER, $idx), $body);
+        }
+        // noformat block which is basically the same as {code}
+        $parser = new DelimiterBasedStringParser('{noformat', 'noformat}');
+        $noformatBlocks = $parser->parse($body);
+        foreach ($noformatBlocks as $idx => $replacement) {
             // replace everything with a placeholder
             $body = str_replace($replacement, sprintf(self::CODE_BLOCK_PLACEHOLDER, $idx), $body);
         }
 
-        return $collected;
+        return array_merge($codeBlocks, $noformatBlocks);
     }
 
     private function convertCode(&$body, $codeBlocks)
@@ -108,12 +109,16 @@ class JiraTagConverter
         foreach ($codeBlocks as $idx => $replace) {
             $body = str_replace(sprintf(self::CODE_BLOCK_PLACEHOLDER, $idx), $replace, $body);
 
-            $strippedString = trim(preg_replace('~{code(:[^}]+)?}~', '', $replace), PHP_EOL);
+            if (strpos($replace, '{noformat}') === 0) {
+                $strippedString = substr($replace, 10, -10);
+            } else {
+                $strippedString = trim(preg_replace('~{code(:[^}]+)?}~', '', $replace), PHP_EOL);
+            }
             $syntax = '';
             if (preg_match('~^{code:([^}]+)}~', $replace, $matches)) {
                 $syntax = $matches[1];
             }
-            if ($this->shouldDo('useExternalHighlighter') && TerminalHighlight::isAvailable() && !empty($syntax)) {
+            if (!empty($syntax) && $this->shouldDo('useExternalHighlighter') && TerminalHighlight::isAvailable()) {
                 $codeBlock = TerminalHighlight::formatCode($strippedString, $syntax);
             } else {
                 $codeBlock = '<comment>' . $strippedString . '</>';
@@ -295,10 +300,10 @@ class JiraTagConverter
         }
 
         foreach ($lines as $idx => $line) {
-            $lines[$idx] = preg_replace('#^-----*#', str_repeat('─', $maxLength), $line);
+            $lines[$idx] = preg_replace('#^-{3,}#', str_repeat('─', $maxLength), $line);
         }
 
-        $body = join(PHP_EOL, $lines);
+        $body = implode(PHP_EOL, $lines);
     }
 
     private function convertPanels(&$body)
