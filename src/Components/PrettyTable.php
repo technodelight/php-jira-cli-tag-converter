@@ -398,7 +398,7 @@ class PrettyTable
             return sprintf($style->getBorderFormat(), str_repeat($style->getHorizontalBorderChar(), $width));
         }
 
-        $width += Helper::strlen($cell) - Helper::strlenWithoutDecoration($this->output->getFormatter(), $cell);
+        $width += Helper::length($cell) - Helper::length(Helper::removeDecoration($this->output->getFormatter(), $cell));
         $content = sprintf($style->getCellRowContentFormat(), $cell);
 
         return sprintf($cellFormat, str_pad($content, $width, $style->getPaddingChar(), $style->getPadType()));
@@ -646,9 +646,7 @@ class PrettyTable
     {
         if (isset($row[$column])) {
             $cell = $row[$column];
-            $cellWidth = Helper::strlenWithoutDecoration($this->output->getFormatter(), $cell);
-
-            return $cellWidth;
+            return Helper::length(Helper::removeDecoration($this->output->getFormatter(), $cell));
         }
 
         return 0;

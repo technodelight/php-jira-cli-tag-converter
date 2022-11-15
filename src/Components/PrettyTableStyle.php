@@ -237,7 +237,7 @@ class PrettyTableStyle extends TableStyle
      *
      * @return string $crossingChar
      */
-    public function getCrossingChar()
+    public function getCrossingChar(): string
     {
         return $this->crossingChar;
     }

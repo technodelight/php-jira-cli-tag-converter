@@ -126,7 +126,7 @@ class PaletteOutputFormatterStyle implements OutputFormatterStyleInterface
      *
      * @return string
      */
-    public function apply($text)
+    public function apply($text): string
     {
         // ESC[ … 38;2;<r>;<g>;<b> … m Select RGB foreground color
 
