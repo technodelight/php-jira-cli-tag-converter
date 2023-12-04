@@ -80,6 +80,15 @@ EOF;
         $this->convert(new NullOutput(), $table)->shouldReturn($renderedTable.PHP_EOL.'test'.PHP_EOL.trim($renderedTable));
     }
 
+    function it_converts_smart_links()
+    {
+        $text = <<<EOF
+[https://docs.google.com/spreadsheets/d/1ECKfw8P0LCYHt-lBd1ryVr8zUhj8Ku-Rt7Z1tOCTjkw/edit#gid=201047368|https://docs.google.com/spreadsheets/d/1ECKfw8P0LCYHt-lBd1ryVr8zUhj8Ku-Rt7Z1tOCTjkw/edit#gid=201047368|smart-link]
+EOF;
+
+        $this->convert(new NullOutput(), $text)->shouldReturn('https://docs.google.com/spreadsheets/d/1ECKfw8P0LCYHt-lBd1ryVr8zUhj8Ku-Rt7Z1tOCTjkw/edit#gid=201047368');
+    }
+
     function it_merges_definitions()
     {
         $this->convert(new NullOutput(), '*_BOLD UNDERSCORED_* *_BOLD UNDERSCORED_*')
@@ -89,5 +98,4 @@ EOF;
         $this->convert(new NullOutput(), '*_B_*' . PHP_EOL . '*_B_*')
             ->shouldReturn('<options=bold,underscore>B</>'.PHP_EOL.'<options=bold,underscore>B</>');
     }
-
 }

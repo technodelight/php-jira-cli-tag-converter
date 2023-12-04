@@ -29,6 +29,7 @@ class JiraTagConverter
         'lists' => true,
         'headings' => true,
         'emojis' => true,
+        'smart_links' => true,
         'palette' => PaletteOutputFormatterStyle::class,
         'terminalWidth' => null,
         'tabulation' => 0,
@@ -60,6 +61,7 @@ class JiraTagConverter
             $this->shouldDo('headings') && $this->convertHeadings($body);
             $this->shouldDo('emojis') && $this->convertEmojis($body);
             $this->shouldDo('tables') && $this->convertTables($body);
+            $this->shouldDo('smart_links') && $this->convertSmartLinks($body);
             $this->shouldDo('code') && $this->convertCode($body, $codeBlocks);
             $formattedBody = $this->mergeDefinitions($body);
             // try formatting the body and ignore if an error happens
@@ -383,6 +385,11 @@ class JiraTagConverter
            '<3' => '❤',
            '</3' => '💔',
         ]);
+    }
+
+    private function convertSmartLinks(&$body)
+    {
+        $body = preg_replace('~\[([^|]+)\|[^|]+\|smart-link\]~', '\1', $body);
     }
 
     private function mergeDefinitions($body)
